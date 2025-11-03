@@ -1,0 +1,71 @@
+%
+%  PARA TRABALLOS EN GALLEGO USAR (LINEA 9): \usepackage[galician]{babel}
+%  PARA TRABALLOS EN CASTELLANO USAR (LINEA 10): \usepackage[spanish]{babel}
+%
+
+\documentclass[12pt,twoside,a4paper]{book}
+% pódense engadir todos os packages necesarios
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{csquotes}
+\usepackage{graphicx}
+\usepackage[dvips]{epsfig}
+\usepackage{amssymb,amsmath,amsfonts}
+\usepackage{eurosym}
+\usepackage{float}
+\usepackage{latexsym}
+\usepackage{a4}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage[backend=biber,style=ieee]{biblatex}
+\addbibresource{referencias.bib}
+
+
+\addto\captionsgalicia{\def\contentsname{Memoria tipo A -- Índice xeral }}
+\addto\captionsgalician{\def\tablename{Táboa}}
+\addto\captionsgalician{\def\listtablename{Índice de táboas}}
+
+\addto\captionsspanish{\def\contentsname{Memoria tipo A -- Índice general }}
+\addto\captionsspanish{\def\tablename{Tabla}}
+\addto\captionsspanish{\def\listtablename{Índice de tablas}}
+	
+
+\begin{document}
+\include{capitulos/titulo}
+\cleardoublepage
+\include{capitulos/agradecementos} % paxina de agradecementos (optativa) 
+\cleardoublepage
+\include{capitulos/resumo}
+
+\cleardoublepage
+\pagestyle{plain}
+\tableofcontents
+\listoffigures
+\listoftables
+
+% Agora incluimos os capítulos. Cambiamos a numeración e as cabeceiras
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\pagestyle{headings}
+\include{capitulos/cap1_introducion}
+\include{capitulos/cap2_req}
+\include{capitulos/cap3_deseño}
+\include{capitulos/cap4_probas}
+\include{capitulos/cap5_conclusions}
+\include{capitulos/exemplos}
+%
+% Engadir os capitulos que fagan falta
+%
+\cleardoublepage
+\printbibliography
+
+% Apéndices
+\appendix
+\cleardoublepage
+\include{capitulos/apendicea}
+\cleardoublepage
+\include{capitulos/apendiceb}
+\cleardoublepage
+\include{capitulos/licenza}
+\end{document}
