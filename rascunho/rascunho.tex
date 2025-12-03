@@ -95,7 +95,7 @@ O \textbf{Modelo do Adversário} define o poder de Eva e as suposições de segu
 \textbf{\textit{1. A Ação de Alice (Cifragem)}}
 Alice usa a chave ($K$) para transformar a mensagem ($M$) em uma série de blocos de sete dígitos ($C$), onde cada bloco representa uma palavra (coordenada).
 \begin{itemize}
-    \item $M \to C$ (Ex: $0040507 \ 1280914 \ 0015003$)
+    \item $M \to C$ (Ex: $5112703 \ 1590308 \ 1590310$)
     \item Alice envia os blocos de sete dígitos pelo rádio público.
 \end{itemize}
 
@@ -109,7 +109,7 @@ Bob recebe os mesmos números ($C$).
 \begin{itemize}
     \item Bob aplica a Chave Secreta ($K$) no processo inverso.
     \item Ele usa o livro \textit{Os Lusíadas} e a regra de coordenadas da chave para localizar o vocábulo correspondente a cada bloco.
-    \item $C \to M$ (Ex: $0040507 \ 1280914 \ 0015003$ se transforma em "Ataque Nascer Sol.")
+    \item $C \to M$ (Ex: $5112703 \ 1590308 \ 1590310$ se transforma em "Ataque Nascer Sol.")
 \end{itemize}
 
 \par\vspace{0.5em}
@@ -160,8 +160,33 @@ Este método resolve o problema da distribuição de chaves e é crucial para a 
 O RSA (Rivest, Shamir e Adleman), proposto em 1977, é um dos primeiros e mais importantes sistemas de criptografia de chave pública.
 
 \subsection{Funcionamento do RSA}
+A segurança do sistema RSA reside na dificuldade computacional de fatorar grandes números primos. O RSA utiliza a aritmética modular, onde todas as operações são realizadas no anel de inteiros $\mathbb{Z}_N$, ou seja, o resultado é sempre o resto da divisão por $N$.
 
-bla bla bla bla
+\begin{itemize}
+    \item \textbf{O Módulo ($N$):} O número $N$ é o \textbf{Módulo RSA}, o resultado do produto de dois números primos muito grandes ($p$ e $q$). Ele define o tamanho do "universo" matemático no qual a cifra opera. O tamanho da chave pública e privada é ditado pelo tamanho de $N$.
+    \item \textbf{A Chave Pública ($e, N$):} O par $(e, N)$ é conhecido por todos e utilizado para cifrar a mensagem.
+    \item \textbf{A Chave Privada ($d$):} O expoente $d$ é mantido em segredo e utilizado para decifrar.
+\end{itemize}
+
+O processo de cifragem e decifragem é baseado nas seguintes operações de exponenciação modular:
+
+\begin{enumerate}
+    \item \textbf{Preparação da Mensagem ($M$):} A mensagem original é convertida em um inteiro $M$ tal que $0 \le M < N$. Caso $M$ seja maior que $N$, é dividida em blocos menores.
+    \item \textbf{Cifragem (Processo Público):} Para cifrar a mensagem $M$, o emissor (Alice) utiliza a Chave Pública $(e, N)$ do receptor e calcula a mensagem cifrada $C$ pela seguinte fórmula:
+    $$ C \equiv M^e \pmod N $$
+    \item \textbf{Decifragem (Processo Privado):} Para decifrar a mensagem cifrada $C$, o receptor (Bob) utiliza sua Chave Privada $d$ e o Módulo $N$ para recuperar a mensagem original $M$:
+    $$ M \equiv C^d \pmod N $$
+\end{enumerate}
+
+\subsubsection*{O Princípio de Correção do RSA e a Função Alçapão}
+A decifragem funciona porque o expoente privado $d$ é o inverso multiplicativo do expoente público $e$ no contexto da função totiente de Euler, $\phi(N) = (p-1)(q-1)$. A relação fundamental que garante que $C^d$ retorna $M$ é o \textbf{Teorema de Euler} generalizado:
+
+\begin{propriedade}
+Se $N=pq$ é o produto de dois primos e $ed \equiv 1 \pmod{\phi(N)}$, então para qualquer mensagem $M$:
+$$ M^{ed} \equiv M \pmod N $$
+\end{propriedade}
+
+A segurança do RSA baseia-se no conceito de \textbf{Função Alçapão} (conceito que será melhor definido adiante). A operação de cifragem ($M \to C$) é fácil de executar. A operação inversa (decifragem $C \to M$) é computacionalmente intratável (muito difícil) sem o conhecimento do "alçapão" ($d$). O alçapão $d$ só pode ser calculado se os fatores primos $p$ e $q$ de $N$ forem conhecidos, o que equivale ao problema da fatoração de grandes números.
 
 \subsection{Geração de Chave RSA}
 Um par de chaves RSA consiste em uma chave pública $(e,N)$ e uma chave privada $d$. O processo de geração é baseado na dificuldade de fatorar grandes números.
@@ -188,17 +213,29 @@ Output: Chave pública RSA (N, e) e chave privada d.
 \end{verbatim}
 
 \section{Sistemas De Logaritmo Discreto}
+A base de segurança para muitos sistemas criptográficos assimétricos, incluindo o Diffie-Hellman e os sistemas baseados em curvas elípticas, é o \textbf{Problema do Logaritmo Discreto} (DLP - Discrete Logarithm Problem).
 
-% - Apresentar o conceito de sistemas de logaritmo discreto
-% - Apresentar o conceito de "Função alçapão"
-bla bla bla bla
+\subsection{O Problema do Logaritmo Discreto (DLP)}
+Seja $G$ um grupo cíclico de ordem $n$, e seja $g$ um gerador de $G$. Para um dado $x \in \mathbb{Z}_n$, calcular o elemento do grupo $y = g^x$ é computacionalmente fácil (problema da exponenciação discreta). No entanto, dado $g$ e $y$, encontrar o expoente $x$ tal que $y = g^x$ é considerado um problema computacionalmente intratável em grupos grandes o suficiente.
+
+\begin{definicao}
+O \textbf{Logaritmo Discreto} $x$, dado os elementos do grupo $g$ e $y$, é o expoente único $x \in \{0, 1, \dots, n-1\}$ tal que $g^x = y$.
+\end{definicao}
+
+A dificuldade de resolver o DLP em grupos específicos é o que confere segurança a estes sistemas.
+
+\subsection{Função Alçapão (Trapdoor Function)}
+O Logaritmo Discreto, juntamente com a Fatoração de Inteiros (base do RSA), constitui um tipo especial de função matemática central para a criptografia de chave pública: a \textbf{Função Alçapão}.
+
+\begin{definicao}
+Uma \textbf{Função Alçapão} (ou \emph{Trapdoor Function}) é uma função que é fácil de calcular em uma direção, mas extremamente difícil de inverter sem possuir informações secretas específicas (o "alçapão").
+\end{definicao}
+
+No contexto do DLP, a função $f(x) = g^x$ é a direção "fácil" (cifragem), enquanto a informação secreta (o alçapão) é a chave privada $x$ (o logaritmo discreto) que permite a inversão (decifragem) eficiente. Se o alçapão é conhecido, a dificuldade computacional é superada.
 
 \section{Sistema de Curvas Elípticas}
 
-% - Definição de "Grupo de Curvas Elípticas", soma, elemento neutro (ponto no infinito)
-% - Seu uso na criptografia
-% - Pseudocódigos
-% ...
+A Criptografia de Curvas Elípticas (ECC - Elliptic Curve Cryptography) é uma abordagem moderna para criptografia de chave pública baseada na estrutura algébrica de curvas elípticas sobre campos finitos. Sua segurança deriva da dificuldade de resolver o \textbf{Problema do Logaritmo Discreto em Curvas Elípticas} (ECDLP), que é significativamente mais difícil de resolver do que o DLP tradicional em grupos finitos ou o problema da fatoração (base do RSA) para o mesmo tamanho de chave. Isso permite que a ECC ofereça o mesmo nível de segurança que outros esquemas com chaves muito menores (e.g., uma chave ECC de 256 bits é comparável em segurança a uma chave RSA de 3072 bits), resultando em maior eficiência e menor consumo de recursos.
 
 \subsection{Grupo de Curvas Elípticas}
 \textbf{\textit{Definição (Grupo De Curvas Elípticas)}}
@@ -268,5 +305,93 @@ Novamente, dobrar um ponto $P$ pode ser definido de maneira geométrica como:
     \item Encontrar o segundo ponto $R'$ no qual a reta tangente intercepta a curva.
     \item Refletir $R'$ com respeito ao eixo $x$ e encontrar $R = 2P$.
 \end{enumerate}
+
+\subsection{Multiplicação Escalar e o ECDLP}
+
+A operação fundamental na ECC é a \textbf{Multiplicação Escalar}, que é essencialmente a soma repetida de um ponto. O ECDLP é baseado na dificuldade de inverter esta operação.
+
+\subsubsection{Multiplicação Escalar}
+A multiplicação escalar de um ponto $P$ por um escalar $k$ (um inteiro) é definida como a soma de $P$ consigo mesmo $k$ vezes:
+$$ Q = kP = \underbrace{P + P + \dots + P}_{k \text{ vezes}} $$
+Esta operação é realizada de forma eficiente através de algoritmos como a \textbf{Adição e Dobra Binária} (ou algoritmo de exponenciação modular adaptado).
+
+\subsubsection{O Problema do Logaritmo Discreto em Curvas Elípticas (ECDLP)}
+A segurança da ECC repousa sobre a dificuldade computacional de inverter a multiplicação escalar.
+
+\begin{definicao}
+O \textbf{Problema do Logaritmo Discreto em Curvas Elípticas (ECDLP)} é o seguinte: Dado um ponto base $G$ e o resultado da multiplicação escalar $Q = kG$, encontrar o escalar (inteiro) $k$ é computacionalmente intratável se a curva e os parâmetros forem escolhidos adequadamente.
+\end{definicao}
+
+No contexto da criptografia de chave pública:
+\begin{itemize}
+    \item $k$ é a \textbf{chave privada} (o alçapão).
+    \item $G$ é o \textbf{ponto base} (parâmetro público).
+    \item $Q$ é a \textbf{chave pública} (resultado da operação).
+\end{itemize}
+
+\subsection{Uso Criptográfico: Geração e Troca de Chaves}
+Para utilizar a ECC, todos os participantes devem concordar em um conjunto de parâmetros globais.
+
+\subsubsection{Parâmetros de Domínio da Curva Elíptica}
+Um esquema ECC requer a definição de um conjunto de seis parâmetros de domínio $\mathcal{D} = (p, a, b, G, n, h)$, que devem ser públicos e verificados:
+\begin{itemize}
+    \item $p$: O módulo primo que define o campo finito $\mathbb{F}_p$.
+    \item $a, b$: Coeficientes que definem a equação da curva $E: y^2 = x^3 + ax + b$.
+    \item $G$: O \textbf{ponto base} (ou gerador) na curva. Todos os cálculos de chaves públicas partem deste ponto.
+    \item $n$: A \textbf{ordem} do ponto $G$ (o menor inteiro positivo tal que $nG = \infty$). Este $n$ deve ser um número primo grande.
+    \item $h$: O cofator, $h = |E(\mathbb{F}_p)|/n$, onde $|E(\mathbb{F}_p)|$ é o número total de pontos na curva.
+\end{itemize}
+
+\subsubsection{Geração de Chaves ECC}
+A geração de chaves é um processo de duas etapas realizado por cada usuário (e.g., Alice).
+
+\begin{enumerate}
+    \item \textbf{Seleção da Chave Privada ($k_{priv}$):} Alice seleciona um inteiro $k_{priv}$ (seu escalar secreto) aleatório no intervalo $[1, n-1]$.
+    \item \textbf{Cálculo da Chave Pública ($P_{pub}$):} Alice calcula o ponto $P_{pub}$ na curva usando o ponto base $G$ e sua chave privada:
+    $$ P_{pub} = k_{priv} \cdot G $$
+    O ponto $P_{pub}$ é sua chave pública.
+\end{enumerate}
+
+\subsubsection{Pseudo Código para Geração de Chave ECC}
+\begin{verbatim}
+Entrada: Parâmetros de Domínio (G, n)
+Saída: Chave Privada (k_priv), Chave Pública (P_pub)
+
+1. k_priv = Seleciona_Aleatorio(1, n-1)
+2. P_pub = Multiplicacao_Escalar(k_priv, G)
+
+3. Retorna (k_priv, P_pub)
+\end{verbatim}
+
+\subsection{Exemplo de Aplicação: Esquema de Troca de Chaves Diffie-Hellman de Curva Elíptica (ECDH)}
+O ECDH é um protocolo fundamental usado para estabelecer um segredo compartilhado (chave de sessão) entre duas partes em um canal inseguro.
+
+\subsubsection{Processo ECDH (Alice e Bob)}
+Assumindo que Alice e Bob concordam nos parâmetros de domínio $(G, n)$, o processo é o seguinte:
+
+\begin{center}
+\begin{tabular}{|>{\bfseries}p{1.8cm}|p{4.5cm}|p{4.5cm}|}
+\hline
+\textbf{Etapa} & \textbf{Alice (Chave Privada $k_A$)} & \textbf{Bob (Chave Privada $k_B$)} \\
+\hline
+\textbf{1. Chaves Privadas} & Seleciona $k_A \in [1, n-1]$ & Seleciona $k_B \in [1, n-1]$ \\
+\hline
+\textbf{2. Chaves Públicas} & Calcula $P_A = k_A \cdot G$ & Calcula $P_B = k_B \cdot G$ \\
+\hline
+\textbf{3. Troca} & Envia $P_A$ para Bob & Envia $P_B$ para Alice \\
+\hline
+\textbf{4. Segredo Compartilhado} & Calcula $S = k_A \cdot P_B$ & Calcula $S = k_B \cdot P_A$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Prova de Igualdade do Segredo}
+O segredo $S$ calculado por ambos é idêntico devido à propriedade associativa da multiplicação escalar:
+$$ S_{\text{Alice}} = k_A \cdot P_B = k_A \cdot (k_B \cdot G) $$
+$$ S_{\text{Bob}} = k_B \cdot P_A = k_B \cdot (k_A \cdot G) $$
+Portanto, $S_{\text{Alice}} = S_{\text{Bob}} = (k_A k_B) \cdot G$.
+
+\subsubsection{Segurança do ECDH}
+Um adversário (Eva) intercepta as chaves públicas $P_A$ e $P_B$ e o ponto base $G$. Para calcular o segredo $S$, Eva precisaria encontrar $k_A$ ou $k_B$ a partir de $G$, o que é exatamente o \textbf{ECDLP}. Como o ECDLP é um problema difícil, o sistema é seguro.
 
 \end{document}
