@@ -1,0 +1,272 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{array}
+\usepackage[portuguese]{babel}
+
+% --- Configuração dos Ambientes ---
+\newtheoremstyle{definicao_estilo}
+  {\topsep}     % Espaço acima
+  {\topsep}     % Espaço abaixo
+  {}            % Estilo da fonte do corpo
+  {}            % Recuo
+  {\bfseries}   % Estilo da fonte do cabeçalho
+  {.}           % Pontuação após o cabeçalho
+  {.5em}        % Espaço após o cabeçalho
+  {}            % Especificação do cabeçalho (padrão)
+
+
+% Cria o ambiente "Definição"
+\theoremstyle{definicao_estilo}
+\newtheorem{definicao}{Definição}
+
+ % Define um ambiente de propriedade, prova, resultado
+\newtheorem{propriedade}{Propriedade}
+\newtheorem{prova}{Prova}
+\newtheorem{resultado}{Resultado}
+
+
+% Inicio do Documento
+\title{Criptografia: Conceitos Fundamentais e Curvas Elípticas}
+\author{Vinicius Tavares}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+% ------------------------------------------------------------------------------------------
+\section{Criptografia}
+
+Criptografia é a prática e o estudo de técnicas para comunicação segura na presença de comportamento adversário. De forma mais geral, a criptografia trata da construção e análise de protocolos que impedem terceiros ou o público de ler mensagens privadas.
+
+% ------------------------------------------------------------------------------------------
+% Exemplo modificado do livro "Guide to Elliptic Curve Cryptograph"
+\par\vspace{1em}
+
+\textbf{\textit{Exemplo Clássico: O Modelo do Adversário (Alice, Bob e Eva)}}
+
+\par\vspace{0.5em}
+
+\textbf{\textit{O Cenário}}
+\begin{itemize}
+    \item \textbf{Alice ($A$)} e \textbf{Bob ($B$)} são agentes secretos que precisam coordenar uma operação.
+    \item \textbf{Eva ($E$)} é a oficial de inteligência inimiga. Sua única tarefa é interceptar e decifrar todas as comunicações.
+    \item \textbf{O Canal Não Seguro:} Alice e Bob usam um rádio de transmissão pública, monitorado 24 horas por dia por Eva.
+\end{itemize}
+
+\par\vspace{0.5em}
+
+\textbf{\textit{O Segredo Compartilhado (A Chave Simétrica)}}
+Antes da missão, Alice e Bob concordaram em usar uma \textbf{chave secreta} ($K$) que Eva não conhece, baseada em um sistema de coordenadas para um livro específico.
+\begin{itemize}
+    \item \textbf{A Chave ($K$):} O livro \textit{Os Lusíadas} de Camões e a instrução para decodificar cada bloco de \textbf{7 dígitos} ($C$) da seguinte forma: os \textbf{3 primeiros} dígitos representam a página do livro, os \textbf{2 seguintes} a linha, e os \textbf{2 últimos} a palavra na linha.
+    \item \textbf{A Mensagem Original ($M$):} "Ataque ao nascer do sol." (reduzida para "Ataque Nascer Sol")
+\end{itemize}
+
+\par\vspace{0.5em}
+
+\textbf{\textit{O Modelo do Adversário (Eva)}}
+O \textbf{Modelo do Adversário} define o poder de Eva e as suposições de segurança do sistema.
+\begin{center}
+\begin{tabular}{|>{\bfseries}l|l|}
+    \hline
+    \textbf{Capacidade de Eva} & \textbf{Descrição} \\
+    \hline
+    \textbf{Poder de Interceção} & Eva \textbf{intercepta} toda a comunicação (os sinais de rádio), recebendo sempre a \textbf{mensagem cifrada} ($C$). \\
+    \hline
+    \textbf{Conhecimento do Algoritmo} & Eva sabe que está sendo usada uma cifra de código. Em criptografia, assumimos que o adversário \textbf{conhece o algoritmo}. \\
+    \hline
+    \textbf{Objetivo} & O objetivo de Eva é obter a \textbf{Mensagem Original} ($M$). \\
+    \hline
+    \textbf{Limitação} & Eva \textbf{NÃO} conhece a Chave Secreta ($K$). \\
+    \hline
+\end{tabular}
+\end{center}
+
+\par\vspace{0.5em}
+
+\textbf{\textit{A Troca de Mensagens (O Algoritmo)}}
+
+\par\vspace{0.2em}
+\textbf{\textit{1. A Ação de Alice (Cifragem)}}
+Alice usa a chave ($K$) para transformar a mensagem ($M$) em uma série de blocos de sete dígitos ($C$), onde cada bloco representa uma palavra (coordenada).
+\begin{itemize}
+    \item $M \to C$ (Ex: $0040507 \ 1280914 \ 0015003$)
+    \item Alice envia os blocos de sete dígitos pelo rádio público.
+\end{itemize}
+
+\par\vspace{0.2em}
+\textbf{\textit{2. A Interceção de Eva (Eavesdropping)}}
+Eva ouve o rádio e anota os números: $C = 0040507 \ 1280914 \ 0015003$. Ela sabe que é uma mensagem secreta, mas os blocos de 7 dígitos não têm sentido para ela.
+
+\par\vspace{0.2em}
+\textbf{\textit{3. A Ação de Bob (Decifragem)}}
+Bob recebe os mesmos números ($C$).
+\begin{itemize}
+    \item Bob aplica a Chave Secreta ($K$) no processo inverso.
+    \item Ele usa o livro \textit{Os Lusíadas} e a regra de coordenadas da chave para localizar o vocábulo correspondente a cada bloco.
+    \item $C \to M$ (Ex: $0040507 \ 1280914 \ 0015003$ se transforma em "Ataque Nascer Sol.")
+\end{itemize}
+
+\par\vspace{0.5em}
+
+\textbf{\textit{A Falha de Eva}}
+Eva não consegue ler a mensagem antes que a operação seja concluída, pois não tem a \textbf{Chave Secreta ($K$)}. O tempo necessário para tentar adivinhar a chave (a \textbf{complexidade computacional}) é inviável.
+
+\par
+\textbf{Conclusão:} O sistema é seguro \textbf{sob o Modelo de Adversário} onde Eva é \textbf{limitada por não ter a chave secreta} e pela dificuldade matemática de encontrá-la.
+
+% ------------------------------------------------------------------------------------------
+\section{Objetivos de Segurança}
+
+
+Com esse exemplo, podemos ilustrar alguns objetivos fundamentais que uma comunicação segura busca atingir:
+
+\begin{enumerate}
+    \item \textbf{Confidencialidade:} Manter os dados em segredo de todos, exceto daqueles autorizados a vê-los. Mensagens enviadas de $A$ para $B$ não devem ser legíveis por $E$.
+    \item \textbf{Integridade dos Dados:} Garantir que os dados não foram alterados por meios não autorizados. $B$ deve ser capaz de detectar quando os dados enviados por $A$ foram modificados por $E$.
+    \item \textbf{Autenticação da Origem dos Dados:} Corroborar a fonte dos dados. $B$ deve ser capaz de verificar que os dados supostamente enviados por $A$ de fato se originaram em $A$.
+    \item \textbf{Autenticação de Entidade:} Corroborar a identidade de uma entidade. $B$ deve estar convencido da identidade da outra entidade comunicante.
+    \item \textbf{Não-Repúdio:} Prevenir que uma entidade negue compromissos ou ações anteriores. $A$ não pode negar ter enviado a mensagem para $B$, e $B$ pode provar isso a um terceiro neutro.
+\end{enumerate}
+Algumas aplicações podem ter outros objetivos de segurança, como \textit{anonimato} ou \textit{controle de acesso}.
+
+% ------------------------------------------------------------------------------------------
+\section{Criptografia de Chave Simétrica vs. Assimétrica}
+Sistemas de criptografia podem ser majoritariamente divididos em dois tipos: Em \textit{esquemas de chave simétrica} ou \textit{esquemas de chave assimétrica (ou chave pública)}.
+
+\subsection{Criptografia de Chave Simétrica}
+Os agentes comunicantes utilizam uma \textbf{chave secreta única} ($K$) para os processos de cifragem e decifragem.
+\begin{itemize}
+    \item \textbf{Cifragem:} $C = E_K(M)$
+    \item \textbf{Decifragem:} $M = D_K(C)$
+\end{itemize}
+É extremamente \textbf{eficiente e rápida}. A principal desvantagem é o \textbf{problema da distribuição de chaves}, ou seja, como $A$ e $B$ podem concordar secretamente sobre $K$ em um canal inseguro.
+
+\subsection{Criptografia de Chave Assimétrica (ou Chave Pública)}
+Os agentes comunicantes utilizam um \textbf{par de chaves} interligadas, mas distintas: uma \textbf{Chave Pública} ($K_{pub}$), distribuída livremente, e uma \textbf{Chave Privada} ($K_{priv}$), mantida em segredo.
+\begin{itemize}
+    \item \textbf{Cifragem (para B):} $C = E_{K_{pub\_B}}(M)$
+    \item \textbf{Decifragem (por B):} $M = D_{K_{priv\_B}}(C)$
+\end{itemize}
+Este método resolve o problema da distribuição de chaves e é crucial para a autenticação (\textbf{assinatura digital}). A chave pública é como a fenda de uma caixa de correio (qualquer um deposita), e a chave privada é a única chave que abre o compartimento.
+
+% ------------------------------------------------------------------------------------------
+\section{Sistemas RSA}
+O RSA (Rivest, Shamir e Adleman), proposto em 1977, é um dos primeiros e mais importantes sistemas de criptografia de chave pública.
+
+\subsection{Funcionamento do RSA}
+
+bla bla bla bla
+
+\subsection{Geração de Chave RSA}
+Um par de chaves RSA consiste em uma chave pública $(e,N)$ e uma chave privada $d$. O processo de geração é baseado na dificuldade de fatorar grandes números.
+
+\subsubsection{Passos para Geração da Chave}
+A chave pública é o par de inteiros $(e, N)$.
+\begin{itemize}
+    \item O \textbf{Módulo RSA} ($N$) é o produto de dois números primos ($p$ e $q$) grandes e aleatórios: $N = pq$.
+    \item O \textbf{Expoente de Cifragem} ($e$) é um inteiro que satisfaz $1 < e < \phi(N)$ e $\text{mdc}(e, \phi(N)) = 1$.
+    \item O \textbf{Expoente de Decifragem} ($d$), a chave privada, é um inteiro que satisfaz $1 < d < \phi(N)$ e a congruência:
+    $$ ed \equiv 1 \pmod{\phi (N)} $$
+    onde $\phi(N)$ é a função totiente de Euler: $\phi(N) = (p-1)(q-1)$.
+\end{itemize}
+
+\subsubsection{Pseudo Código de Geração}
+\begin{verbatim}
+Input: parâmetro de segurança l.
+Output: Chave pública RSA (N, e) e chave privada d.
+  1. Seleciona aleatoriamente dois primos p e q.
+  2. Calcula N = pq e phi = (p-1)(q-1).
+  3. Seleciona um inteiro e arbitrário com 1 < e < phi e mdc(e, phi) = 1.
+  4. Calcula o inteiro d que satisfaz 1 < d < phi e ed = 1 (mod phi).
+  5. Retorna (N, e, d).
+\end{verbatim}
+
+\section{Sistemas De Logaritmo Discreto}
+
+% - Apresentar o conceito de sistemas de logaritmo discreto
+% - Apresentar o conceito de "Função alçapão"
+bla bla bla bla
+
+\section{Sistema de Curvas Elípticas}
+
+% - Definição de "Grupo de Curvas Elípticas", soma, elemento neutro (ponto no infinito)
+% - Seu uso na criptografia
+% - Pseudocódigos
+% ...
+
+\subsection{Grupo de Curvas Elípticas}
+\textbf{\textit{Definição (Grupo De Curvas Elípticas)}}
+
+Seja $p$ um número primo, e seja $\mathbb{F}_p$ o campo dos inteiros módulo $p$. Uma \emph{curva elíptica $E$ sobre $\mathbb{F}_p$} é definida por uma equação da forma
+\begin{equation}
+    y^2 = x^3 + ax + b,
+\tag{1.4}\label{eq:curva_eliptica}
+\end{equation}
+onde $a, b \in \mathbb{F}_p$ satisfazem $4a^3 + 27b^2 \not\equiv 0 \pmod p$. Um par $(x, y)$, onde $x, y \in \mathbb{F}_p$, é um \emph{ponto} na curva se $(x, y)$ satisfaz a equação (\ref{eq:curva_eliptica}). O \emph{ponto no infinito}, denotado por $\infty$, também é considerado um ponto na curva. O conjunto de todos os pontos em $E$ é denotado por $E(\mathbb{F}_p)$.
+
+\subsection{A Soma de Pontos em $E(\mathbb{F}_p)$}
+
+O conjunto de pontos em uma curva elíptica $E$ sobre $\mathbb{F}_p$, denotado por $E(\mathbb{F}_p)$, forma um grupo abeliano sob uma operação binária chamada "adição de pontos" (ou soma). O elemento neutro (ou identidade) é o \textbf{Ponto no Infinito} ($\infty$), que atua como o \textbf{zero} desta soma.
+
+\subsubsection{O Ponto no Infinito ($\infty$) - Elemento Neutro}
+
+Na geometria da curva elíptica, o $\mathbf{\infty}$ é crucial para completar a estrutura do grupo.
+
+\begin{itemize}
+    \item \textbf{Elemento Neutro:} Assim como zero em números reais ($5+0=5$), a soma de qualquer ponto com o Ponto no Infinito é o próprio ponto:
+    $$ P_1 + \infty = P_1 $$
+    \item \textbf{Inverso (Negativo):} O inverso de um ponto $P_1 = (x_1, y_1)$ é o ponto $\mathbf{-P_1} = (x_1, -y_1)$, que é a sua reflexão sobre o eixo $x$.
+    \item \textbf{Soma de Inversos:} Quando a reta que une um ponto $P_1$ ao seu inverso $-P_1$ é traçada, ela é vertical. A definição geométrica da soma afirma que uma reta vertical intersecta a curva em $P_1$, $-P_1$ e, finalmente, no Ponto no Infinito ($\infty$).
+    \item \textbf{Regra:} A soma de um ponto com seu inverso resulta no elemento neutro:
+    $$ P_1 + (-P_1) = \infty $$
+\end{itemize}
+
+\subsubsection*{Soma de Dois Pontos Distintos ($P_1 \neq P_2$)}
+Se $P_1$ e $P_2$ são distintos e $x_1 \neq x_2$, a soma $R = P_1 + P_2 = (x_3, y_3)$ é calculada em três passos:
+
+\begin{enumerate}
+    \item \textbf{Cálculo do Coeficiente Angular ($\lambda$):}
+    $$ \lambda = \frac{y_2 - y_1}{x_2 - x_1} \pmod p $$
+    \item \textbf{Coordenada $x$ do Resultado ($x_3$):}
+    $$ x_3 = \lambda^2 - x_1 - x_2 \pmod p $$
+    \item \textbf{Coordenada $y$ do Resultado ($y_3$):}
+    $$ y_3 = \lambda(x_1 - x_3) - y_1 \pmod p $$
+\end{enumerate}
+
+Em termos simples, a soma de dois pontos $P$ e $Q$ em uma curva elíptica não é uma soma numérica tradicional, mas sim uma \textbf{operação geométrica} que garante que o resultado seja sempre um novo ponto na própria curva, transformando o conjunto de pontos em um grupo matemático.
+
+Geometricamente, somar dois pontos $P_1$ e $P_2$ (com $P_1 \neq P_2$) pode ser definido como: 
+\begin{enumerate}
+    \item Traçar uma reta que passa por $P_1$ e $P_2$.
+    \item Encontrar o terceiro ponto $R'$ no qual a reta intercepta a curva.
+    \item Refletir $R'$ com respeito ao eixo $x$ e encontrar $R$.
+\end{enumerate}
+
+\subsubsection*{Dobra de um Ponto ($P_1 = P_2$)}
+Se desejamos calcular $2P_1 = P_1 + P_1$, a fórmula do coeficiente angular ($\lambda$) muda para a inclinação da reta tangente ao ponto $P_1$:
+
+\begin{enumerate}
+    \item \textbf{Cálculo do Coeficiente Angular ($\lambda$):}
+    Lembrando que a curva é $y^2 = x^3 + ax + b$, a inclinação é dada pela derivada implícita:
+    $$ \lambda = \frac{3x_1^2 + a}{2y_1} \pmod p $$
+    \item \textbf{Coordenada $x$ do Resultado ($x_3$):}
+    $$ x_3 = \lambda^2 - 2x_1 \pmod p $$
+    \item \textbf{Coordenada $y$ do Resultado ($y_3$):}
+    $$ y_3 = \lambda(x_1 - x_3) - y_1 \pmod p $$
+\end{enumerate}
+
+Novamente, dobrar um ponto $P$ pode ser definido de maneira geométrica como:
+
+\begin{enumerate}
+    \item Traçar a reta tangente à curva exatamente no ponto $P$.
+    \item Encontrar o segundo ponto $R'$ no qual a reta tangente intercepta a curva.
+    \item Refletir $R'$ com respeito ao eixo $x$ e encontrar $R = 2P$.
+\end{enumerate}
+
+\end{document}

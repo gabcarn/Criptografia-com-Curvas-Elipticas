@@ -1,0 +1,454 @@
+\documentclass[aspectratio=169]{beamer}
+
+% Configurações de idioma e codificação
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{tikz} % Para desenhar curvas simples
+
+% Tema e Cores
+\usetheme{Madrid}
+\usecolortheme{beaver} % Esquema de cores vermelho/cinza (distinto do anterior)
+
+% Metadados
+\title[Curvas Elípticas e Criptografia]{Criptografia de Curvas Elípticas (ECC)}
+\subtitle{Um dos princípais metodos para segurança moderna}
+\author{Everton Reis \\ Gabriel Carneiro \\ Vinicius \\ Yamal}
+\institute[FGV - EMAP]{EMAP \\ FGV}
+\date{\today}
+
+% Configuração de Sumário
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Roteiro}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\begin{document}
+
+% --- SLIDE 1: Capa ---
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% --- SLIDE 2: Roteiro Geral ---
+\begin{frame}{Roteiro da Apresentação}
+  \tableofcontents
+\end{frame}
+
+% ==================================================================
+% SEÇÃO 1: INTRODUÇÃO
+% ==================================================================
+\section{Introdução}
+
+\begin{frame}{O Problema da Comunicação Segura}
+  \begin{itemize}
+      \item Vivemos na era da informação digital.
+      \item \textbf{Desafio:} Como Alice e Bob podem trocar segredos em um canal público sem que Eve (uma espiã) entenda a mensagem?
+      \item Necessidade de:
+      \begin{itemize}
+          \item Confidencialidade.
+          \item Integridade.
+          \item Autenticidade.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Criptografia Simétrica vs. Assimétrica}
+  \begin{columns}
+      \column{0.5\textwidth}
+      \textbf{Simétrica (Clássica)}
+      \begin{itemize}
+          \item Uma única chave para criptografar e descriptografar.
+          \item Rápida.
+          \item \alert{Problema:} Como trocar a chave inicial?
+      \end{itemize}
+      
+      \column{0.5\textwidth}
+      \textbf{Assimétrica (Chave Pública)}
+      \begin{itemize}
+          \item Duas chaves: Pública (encripta) e Privada (decripta).
+          \item Resolve o problema da troca de chaves.
+          \item Baseada em problemas matemáticos "difíceis".
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{A Função Trapdoor (Alçapão)}
+  A base da criptografia moderna é a \textbf{Função Trapdoor}:
+  
+  \vspace{0.5cm}
+  \begin{block}{Definição Intuitiva}
+    Uma função que é fácil de computar em uma direção, mas extremamente difícil de reverter sem uma informação especial (a chave privada).
+  \end{block}
+  
+  \vspace{0.3cm}
+  $$ Easy: X \rightarrow f(X) $$
+  $$ Hard: f(X) \rightarrow X \quad (\text{sem a chave}) $$
+\end{frame}
+
+\begin{frame}{Exemplos de Problemas Difíceis}
+  \begin{enumerate}
+      \item \textbf{Fatoração de Inteiros:} Dado $N = p \cdot q$, encontrar $p$ e $q$. (Base do RSA).
+      \item \textbf{Logaritmo Discreto:} Dado $g^x \pmod p$, encontrar $x$. (Base do Diffie-Hellman clássico).
+      \item \textbf{Logaritmo Discreto em Curvas Elípticas (ECDLP):} O foco desta apresentação.
+  \end{enumerate}
+\end{frame}
+
+% ==================================================================
+% SEÇÃO 2: CRIPTOGRAFIA E RSA
+% ==================================================================
+\section{Criptografia Clássica e o Padrão RSA}
+
+\begin{frame}{O RSA (Rivest-Shamir-Adleman)}
+  \begin{itemize}
+      \item Introduzido em 1977.
+      \item Foi o padrão ouro da criptografia por décadas.
+      \item Baseia-se na dificuldade de fatorar números grandes.
+      \item Se você multiplicar dois primos gigantes, é fácil obter o resultado. Se te derem o resultado, é "impossível" achar os primos originais em tempo hábil.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O Problema do Tamanho da Chave}
+  \begin{alertblock}{A Evolução do Poder Computacional}
+    Algoritmos de fatoração (como o *General Number Field Sieve*) ficaram melhores e computadores ficaram mais rápidos.
+  \end{alertblock}
+  
+  Para manter o RSA seguro, tivemos que aumentar drasticamente o tamanho das chaves.
+  
+  \begin{itemize}
+      \item Anos 90: 512 bits (já quebrado).
+      \item Anos 2000: 1024 bits (não recomendado).
+      \item \textbf{Hoje (Padrão NIST):} 2048 ou 3072 bits.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O Custo do RSA}
+  Chaves muito grandes trazem problemas práticos:
+  \begin{enumerate}
+      \item \textbf{Lentidão:} A geração de chaves e a encriptação consomem muita CPU.
+      \item \textbf{Armazenamento:} Certificados digitais grandes.
+      \item \textbf{Dispositivos Móveis/IoT:} Celulares e sensores têm bateria e processamento limitados. RSA de 4096 bits é inviável para um sensor de temperatura IoT, por exemplo.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{A Necessidade de Algo Novo}
+  Precisávamos de um sistema criptográfico que oferecesse:
+  
+  \begin{enumerate}
+      \item O mesmo nível de segurança que o RSA.
+      \item Chaves significativamente menores.
+      \item Operações mais rápidas.
+  \end{enumerate}
+  
+  \vspace{0.5cm}
+  \textbf{Solução:} Criptografia de Curvas Elípticas (ECC).
+\end{frame}
+
+% ==================================================================
+% SEÇÃO 3: CURVAS ELÍPTICAS
+% ==================================================================
+\section{A Matemática das Curvas Elípticas}
+
+\begin{frame}{Definição Geométrica}
+  Uma Curva Elíptica $E$ sobre os números reais $\mathbb{R}$ é definida pela equação de Weierstrass:
+  
+  $$ y^2 = x^3 + ax + b $$
+  
+  \vspace{0.3cm}
+  Onde $4a^3 + 27b^2 \neq 0$ (Condição para não haver singularidades/bicos na curva).
+\end{frame}
+
+\begin{frame}{Visualização}
+  \begin{columns}
+      \column{0.5\textwidth}
+      \begin{tikzpicture}[scale=0.6]
+        \draw[->] (-3,0) -- (3,0) node[right] {$x$};
+        \draw[->] (0,-3) -- (0,3) node[above] {$y$};
+        \draw[thick, color=red] plot[domain=-2.2:2.2, samples=100] (\x, {sqrt(abs(\x^3 - 2*\x + 2))});
+        \draw[thick, color=red] plot[domain=-2.2:2.2, samples=100] (\x, {-sqrt(abs(\x^3 - 2*\x + 2))});
+        \node at (0,-4) {Exemplo: $y^2 = x^3 - 2x + 2$};
+      \end{tikzpicture}
+      
+      \column{0.5\textwidth}
+      \textbf{Características:}
+      \begin{itemize}
+          \item Simétrica em relação ao eixo $x$ (por causa do $y^2$).
+          \item Aparência suave (sem auto-interseções).
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{A Lei do Grupo}
+  Para usar curvas elípticas em criptografia, precisamos definir operações matemáticas sobre os pontos da curva.
+  
+  \begin{block}{Soma de Pontos}
+    Queremos somar dois pontos $P$ e $Q$ na curva para obter um terceiro ponto $R$.
+    $$ P + Q = R $$
+  \end{block}
+  
+  Isso transforma o conjunto de pontos da curva em um \textbf{Grupo Abeliano}.
+\end{frame}
+
+\begin{frame}{Adição Geométrica (Caso $P \neq Q$)}
+  \textbf{Regra da Corda:}
+  1. Trace uma linha passando por $P$ e $Q$.
+  2. Essa linha interceptará a curva em um terceiro ponto, digamos $-R$.
+  3. Reflita $-R$ sobre o eixo $x$ para encontrar $R$.
+  
+  $$ P + Q = R $$
+\end{frame}
+
+\begin{frame}{Dobro de Ponto (Caso $P = Q$)}
+  \textbf{Regra da Tangente:}
+  Para calcular $P + P = 2P$:
+  1. Trace a linha tangente à curva no ponto $P$.
+  2. Essa tangente interceptará a curva em um ponto $-R$.
+  3. Reflita sobre o eixo $x$ para obter $R = 2P$.
+\end{frame}
+
+\begin{frame}{O Ponto no Infinito ($\mathcal{O}$)}
+  Assim como o número 0 na adição normal ($5 + 0 = 5$), precisamos de um elemento neutro.
+  
+  \begin{itemize}
+      \item Definimos um ponto idealizado "no infinito", denotado por $\mathcal{O}$.
+      \item Geometricamente, pense nele como o topo e o fundo do eixo $y$ se encontrando.
+      \item Propriedade: $P + \mathcal{O} = P$.
+      \item Propriedade: $P + (-P) = \mathcal{O}$ (linha vertical).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Fórmulas Algébricas}
+  Não precisamos desenhar linhas no computador; usamos álgebra.
+  Sejam $P=(x_1, y_1)$ e $Q=(x_2, y_2)$. Para achar $R=(x_3, y_3)$:
+  
+  Calculamos a inclinação $\lambda$:
+  $$ \lambda = \begin{cases} \frac{y_2 - y_1}{x_2 - x_1} & \text{se } P \neq Q \\ \frac{3x_1^2 + a}{2y_1} & \text{se } P = Q \end{cases} $$
+  
+  E as coordenadas:
+  $$ x_3 = \lambda^2 - x_1 - x_2 $$
+  $$ y_3 = \lambda(x_1 - x_3) - y_1 $$
+\end{frame}
+
+\begin{frame}{Curvas Elípticas sobre Corpos Finitos}
+  Criptografia não trabalha com números reais (precisão infinita é impossível no computador). Trabalhamos com inteiros modulo um primo $p$.
+  
+  $$ E(\mathbb{F}_p): \quad y^2 \equiv x^3 + ax + b \pmod p $$
+  
+  \textbf{O que muda?}
+  \begin{itemize}
+      \item A curva não é mais uma linha suave.
+      \item Torna-se uma "nuvem" de pontos discretos dentro de um quadrado $p \times p$.
+      \item \textbf{Magia:} As fórmulas algébricas de adição continuam funcionando perfeitamente!
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Visualização em $\mathbb{F}_p$}
+  A curva $y^2 \equiv x^3 - x + 1 \pmod{97}$ parece ruído aleatório, mas preserva a estrutura de grupo.
+  
+  \begin{itemize}
+      \item Se você traçar uma linha "modular" entre dois pontos, ela "dá a volta" nas bordas (como no jogo Pac-Man) e atinge um terceiro ponto.
+  \end{itemize}
+  Isso é essencial para a segurança: a geometria torna-se obscura, mas a aritmética permanece.
+\end{frame}
+
+\begin{frame}{Ordem da Curva}
+  Quantos pontos existem na curva sobre $\mathbb{F}_p$?
+  
+  \begin{itemize}
+      \item A quantidade de pontos é denotada por $N$ ou $\#E(\mathbb{F}_p)$.
+      \item \textbf{Teorema de Hasse:} O número de pontos está muito próximo de $p$.
+      $$ |N - (p+1)| \le 2\sqrt{p} $$
+      \item Para criptografia, queremos $N$ sendo um número primo grande (ou múltiplo de um primo grande).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Multiplicação Escalar}
+  A operação central na ECC é a \textbf{Multiplicação Escalar}.
+  
+  Seja $P$ um ponto na curva e $k$ um número inteiro muito grande.
+  $$ kP = \underbrace{P + P + \dots + P}_{k \text{ vezes}} $$
+  
+  \begin{itemize}
+      \item Graças ao algoritmo "Double-and-Add" (baseado na representação binária de $k$), podemos calcular $kP$ muito rápido, mesmo se $k$ tiver 256 bits (tamanho astronômico).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O Problema do Logaritmo Discreto em Curvas Elípticas (ECDLP)}
+  Aqui está a base da segurança (a função Trapdoor):
+  
+  \vspace{0.3cm}
+  \begin{block}{ECDLP}
+    Dados dois pontos $P$ e $Q$ na curva, tal que $Q = kP$, é \textbf{computacionalmente inviável} encontrar o escalar $k$.
+  \end{block}
+  
+  \begin{itemize}
+      \item \textbf{Fácil:} Dado $k$ e $P$, achar $Q$. (Multiplicação)
+      \item \textbf{Difícil:} Dado $P$ e $Q$, achar $k$. (Logaritmo)
+  \end{itemize}
+  
+  \textit{Nota:} É chamado "logaritmo" por analogia à aritmética modular ($g^k \to k$), embora a operação seja aditiva.
+\end{frame}
+
+% ==================================================================
+% SEÇÃO 4: CRIPTOGRAFIA COM CURVAS ELÍPTICAS
+% ==================================================================
+\section{Criptografia com Curvas Elípticas (ECC)}
+
+\begin{frame}{Por que ECC é melhor?}
+  O problema ECDLP é "mais difícil" que a fatoração do RSA.
+  
+  \begin{itemize}
+      \item Não existem algoritmos sub-exponenciais eficientes (como o Index Calculus) que funcionem bem para curvas elípticas genéricas.
+      \item O melhor ataque conhecido é o \textit{Pollard's rho}, que exige $\sqrt{N}$ operações.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Comparação de Tamanho de Chave}
+  Para obter o mesmo nível de segurança (bits de entropia):
+  
+  \begin{table}[]
+  \centering
+  \begin{tabular}{|c|c|c|c|}
+  \hline
+  \textbf{Nível de Segurança} & \textbf{RSA (bits)} & \textbf{ECC (bits)} & \textbf{Razão} \\ \hline
+  80  & 1024 & 160 & 6:1 \\ \hline
+  112 & 2048 & 224 & 9:1 \\ \hline
+  128 (Top Secret) & 3072 & 256 & 12:1 \\ \hline
+  256 & 15360 & 512 & 30:1 \\ \hline
+  \end{tabular}
+  \end{table}
+  
+  ECC com 256 bits é o padrão da indústria hoje (Bitcoin, SSH, HTTPS). RSA exige 3072 bits para competir.
+\end{frame}
+
+\begin{frame}{ECDH: Troca de Chaves Diffie-Hellman}
+  Como Alice e Bob concordam em uma chave secreta via ECC?
+  
+  \textbf{Parâmetros Públicos:} Curva $E$, Primo $p$, Ponto Base $G$.
+  
+  \begin{enumerate}
+      \item \textbf{Alice:} Escolhe inteiro privado $a$. Calcula pública $A = aG$. Envia $A$.
+      \item \textbf{Bob:} Escolhe inteiro privado $b$. Calcula pública $B = bG$. Envia $B$.
+      \item \textbf{Alice:} Calcula segredo $S = aB = a(bG) = abG$.
+      \item \textbf{Bob:} Calcula segredo $S = bA = b(aG) = abG$.
+  \end{enumerate}
+  
+  \textbf{Eve:} Vê $A$ e $B$, mas não consegue calcular $abG$ sem saber $a$ ou $b$ (ECDLP).
+\end{frame}
+
+\begin{frame}{ECDSA: Assinatura Digital}
+  O algoritmo usado pelo Bitcoin para autorizar transações.
+  
+  \begin{itemize}
+      \item Alice assina uma mensagem $m$ usando sua chave privada $d_A$.
+      \item Gera um par $(r, s)$.
+      \item Bob usa a chave pública de Alice $Q_A$ para verificar matematicamente se a assinatura foi gerada por $d_A$.
+      \item Crucial: Alice nunca revela $d_A$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Curvas Padronizadas (NIST)}
+  Não se inventa uma curva do zero (perigo de curvas fracas). Usam-se curvas padrão.
+  
+  \textbf{Exemplo: secp256k1 (Bitcoin)}
+  $$ y^2 = x^3 + 7 \pmod p $$
+  
+  \textbf{Exemplo: P-256 (NIST / Web)}
+  $$ y^2 = x^3 - 3x + b \pmod p $$
+  
+  Estas curvas foram testadas exaustivamente contra ataques matemáticos.
+\end{frame}
+
+\begin{frame}{Vantagens Práticas da ECC}
+  \begin{block}{Eficiência Energética}
+    Chaves menores $\to$ Menos cálculos $\to$ Menos consumo de bateria. Ideal para smartphones e cartões inteligentes.
+  \end{block}
+  
+  \begin{block}{Largura de Banda}
+    Handshakes SSL/TLS são mais rápidos pois os pacotes de dados enviados são menores.
+  \end{block}
+\end{frame}
+
+% ==================================================================
+% SEÇÃO 5: APLICAÇÃO E IMPLEMENTAÇÃO
+% ==================================================================
+\section{Possíveis aplicações}
+
+\begin{frame}{Onde a ECC é usada hoje?}
+  \begin{itemize}
+      \item \textbf{Criptomoedas:} Bitcoin, Ethereum (assinam transações).
+      \item \textbf{Internet Segura (HTTPS/TLS):} A maioria das conexões modernas usa ECDH para trocar chaves de sessão.
+      \item \textbf{Mensageria:} WhatsApp, Signal, iMessage (criptografia ponta-a-ponta).
+      \item \textbf{Governo:} Passaportes biométricos, Cartões de identificação.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Proposta de Implementação}
+  Para a parte prática deste trabalho (a ser desenvolvida), o objetivo é implementar o protocolo \textbf{ECDH (Elliptic Curve Diffie-Hellman)}.
+  
+  \textbf{Ferramentas:}
+  \begin{itemize}
+      \item Linguagem: Python.
+      \item Bibliotecas Matemáticas: Implementação "from scratch" das operações de ponto ou uso de bibliotecas como \texttt{cryptography} ou \texttt{fastecdsa} para comparação de performance.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Etapas da Implementação}
+  \begin{enumerate}
+      \item Definir a classe \texttt{Point} e a classe \texttt{EllipticCurve}.
+      \item Implementar a aritmética modular.
+      \item Implementar a adição de pontos e duplicação (fórmulas algébricas).
+      \item Implementar a multiplicação escalar (algoritmo Double-and-Add).
+      \item Simular a troca de chaves entre Alice e Bob e verificar se o segredo compartilhado é idêntico.
+  \end{enumerate}
+\end{frame}
+
+% ==================================================================
+% SEÇÃO 6: CONCLUSÃO
+% ==================================================================
+\section{Conclusão}
+
+\begin{frame}{Resumo das Vantagens}
+  A Criptografia de Curvas Elípticas representa o estado da arte em segurança assimétrica.
+  
+  \begin{itemize}
+      \item \textbf{Segurança Máxima:} Baseada em um problema matemático robusto (ECDLP).
+      \item \textbf{Eficiência Máxima:} Chaves de 256 bits oferecem segurança militar.
+      \item \textbf{Escalabilidade:} Perfeita para o mundo IoT e Mobile.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{O Futuro e a Computação Quântica}
+  \begin{alertblock}{Ameaça Quântica}
+    O Algoritmo de Shor, se executado em um computador quântico grande o suficiente, quebrará tanto RSA quanto ECC.
+  \end{alertblock}
+  
+  \vspace{0.3cm}
+  O futuro aponta para a \textbf{Criptografia Pós-Quântica} (Lattices, Isogenias), mas por enquanto, e pelas próximas décadas de transição, a ECC continuará sendo a espinha dorsal da segurança na internet.
+\end{frame}
+
+\begin{frame}{Considerações Finais}
+  As Curvas Elípticas são um exemplo brilhante de como a matemática abstrata (geometria algébrica sobre corpos finitos), estudada por séculos sem aplicação prática, tornou-se fundamental para a privacidade e economia do século XXI.
+\end{frame}
+
+\begin{frame}{Referências}
+  \begin{itemize}
+      \item Koblitz, N. (1987). \textit{Elliptic Curve Cryptosystems}.
+      \item Miller, V. (1985). \textit{Use of Elliptic Curves in Cryptography}.
+      \item Hankerson, D., Menezes, A., Vanstone, S. \textit{Guide to Elliptic Curve Cryptography}.
+      \item NIST FIPS 186-4. \textit{Digital Signature Standard (DSS)}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+      \Huge Obrigado!
+  \end{center}
+\end{frame}
+
+\end{document}
